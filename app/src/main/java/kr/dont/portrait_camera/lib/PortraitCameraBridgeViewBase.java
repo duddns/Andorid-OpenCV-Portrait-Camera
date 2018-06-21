@@ -84,6 +84,10 @@ public abstract class PortraitCameraBridgeViewBase extends SurfaceView implement
         styledAttrs.recycle();
     }
 
+    public int getCameraIndex() {
+        return this.mCameraIndex;
+    }
+
     /**
      * Sets the camera index
      * @param cameraIndex new camera index
@@ -415,9 +419,14 @@ public abstract class PortraitCameraBridgeViewBase extends SurfaceView implement
 
                 Log.d(TAG, String.format("scale: %f, canvas width x height: %d x %d, bitmap width x height:%d x %d ", mScale, canvas.getWidth(), canvas.getHeight(), mCacheBitmap.getWidth(), mCacheBitmap.getHeight()));
 
-                // 이미지 세로 회전
+                // duddns: Rotate image
+                float degrees = 90f; // for Back Camera
+                if (CAMERA_ID_FRONT == mCameraIndex) {
+                    degrees = 270f; // for Front Camera
+                }
+
                 Matrix matrix = new Matrix();
-                matrix.postRotate(90f);
+                matrix.postRotate(degrees);
                 Bitmap bitmap = Bitmap.createBitmap(mCacheBitmap, 0, 0, mCacheBitmap.getWidth(), mCacheBitmap.getHeight(), matrix, true);
 
                 if (mScale != 0) {

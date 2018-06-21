@@ -1,8 +1,11 @@
 package kr.dont.portrait_camera;
 
+import android.content.res.TypedArray;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
+import android.view.View;
+import android.widget.Button;
 
 import org.opencv.android.BaseLoaderCallback;
 import org.opencv.android.LoaderCallbackInterface;
@@ -13,7 +16,7 @@ import kr.dont.portrait_camera.lib.PortraitCameraBridgeViewBase;
 
 public class MainActivity extends AppCompatActivity implements PortraitCameraBridgeViewBase.CvCameraViewListener2 {
 
-    private final String _TAG = "ProcessedCameraActivity:";
+    private final String _TAG = "MainActivity:";
 
     private PortraitCameraBridgeViewBase mOpenCvCameraView;
 
@@ -25,6 +28,33 @@ public class MainActivity extends AppCompatActivity implements PortraitCameraBri
 
         mOpenCvCameraView = (PortraitCameraBridgeViewBase) findViewById(R.id.cameraView);
         mOpenCvCameraView.setCvCameraViewListener(this);
+
+        // duddns: Change Back / Front Camera
+        Button changeCameraButton = (Button) findViewById(R.id.changeCameraButton);
+        changeCameraButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                String TAG = new StringBuilder(_TAG).append("onClickChangeCameraButton").toString();
+
+                stopCamera(TAG);
+
+                int cameraIndex = mOpenCvCameraView.getCameraIndex();
+                switch (cameraIndex) {
+                    case PortraitCameraBridgeViewBase.CAMERA_ID_FRONT:
+                        mOpenCvCameraView.setCameraIndex(PortraitCameraBridgeViewBase.CAMERA_ID_BACK);
+                        break;
+                    case PortraitCameraBridgeViewBase.CAMERA_ID_BACK:
+                        mOpenCvCameraView.setCameraIndex(PortraitCameraBridgeViewBase.CAMERA_ID_FRONT);
+                        break;
+                    default:
+                        mOpenCvCameraView.setCameraIndex(PortraitCameraBridgeViewBase.CAMERA_ID_BACK);
+                        break;
+                }
+
+                startCamera(TAG);
+            }
+        });
+
     }
 
     @Override
@@ -32,23 +62,13 @@ public class MainActivity extends AppCompatActivity implements PortraitCameraBri
         super.onResume();
 
         String TAG = new StringBuilder(_TAG).append("onResume").toString();
-        if (!OpenCVLoader.initDebug()) {
-            Log.i(TAG, "Internal OpenCV library not found. Using OpenCV Manager for initiation");
-            OpenCVLoader.initAsync(OpenCVLoader.OPENCV_VERSION_3_0_0, this, loaderCallback);
-        } else {
-            Log.i(TAG, "OpenCV library found inside package. Using it");
-            loaderCallback.onManagerConnected(LoaderCallbackInterface.SUCCESS);
-        }
+        startCamera(TAG);
     }
 
     @Override
     protected void onPause() {
         String TAG = new StringBuilder(_TAG).append("onPause").toString();
-        Log.i(TAG, "Disabling a camera view");
-
-        if (mOpenCvCameraView != null) {
-            mOpenCvCameraView.disableView();
-        }
+        stopCamera(TAG);
 
         super.onPause();
     }
@@ -56,11 +76,7 @@ public class MainActivity extends AppCompatActivity implements PortraitCameraBri
     @Override
     protected void onDestroy() {
         String TAG = new StringBuilder(_TAG).append("onDestroy").toString();
-        Log.i(TAG, "Disabling a camera view");
-
-        if (mOpenCvCameraView != null) {
-            mOpenCvCameraView.disableView();
-        }
+        stopCamera(TAG);
 
         super.onDestroy();
     }
@@ -100,5 +116,24 @@ public class MainActivity extends AppCompatActivity implements PortraitCameraBri
         Mat rgba = inputFrame.rgba();
 
         return rgba;
+    }
+
+
+    private void startCamera(String TAG) {
+        if (!OpenCVLoader.initDebug()) {
+            Log.i(TAG, "Internal OpenCV library not found. Using OpenCV Manager for initiation");
+            OpenCVLoader.initAsync(OpenCVLoader.OPENCV_VERSION_3_0_0, this, loaderCallback);
+        } else {
+            Log.i(TAG, "OpenCV library found inside package. Using it");
+            loaderCallback.onManagerConnected(LoaderCallbackInterface.SUCCESS);
+        }
+    }
+
+    private void stopCamera(String TAG) {
+        Log.i(TAG, "Disabling a camera view");
+
+        if (mOpenCvCameraView != null) {
+            mOpenCvCameraView.disableView();
+        }
     }
 }
